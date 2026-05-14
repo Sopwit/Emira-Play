@@ -1,0 +1,146 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'EmiraDisplay';
+  src: url('./assets/game/font/page-hero-font/Marley Antique.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'EmiraNft';
+  src: url('./assets/game/font/nft-isim-font/NATOOR.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'EmiraSoft';
+  src: url('./assets/game/font/normal-font/Young Kids.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@theme {
+  --color-void: #f6f9fc;
+  --color-abyss: #ffffff;
+  --color-deep: #eef4f8;
+  --color-surface: #d7e3ec;
+  --color-aurora-start: #0f6cbd;
+  --color-aurora-mid: #2f80ed;
+  --color-aurora-end: #36b3a8;
+  --color-electric: #0b8f83;
+  --color-neon: #1f9d70;
+  --color-text-primary: #12263a;
+  --color-text-secondary: #496174;
+  --color-text-muted: #75879a;
+
+  --font-family-display: 'EmiraDisplay', system-ui, sans-serif;
+  --font-family-mono: 'IBM Plex Mono', monospace;
+  --font-family-nft: 'EmiraNft', 'EmiraSoft', 'IBM Plex Mono', 'Segoe UI', sans-serif;
+  --font-family-soft: 'EmiraSoft', 'IBM Plex Mono', 'Segoe UI', sans-serif;
+  --font-family-soft-safe: 'IBM Plex Mono', 'Segoe UI', 'Trebuchet MS', sans-serif;
+
+  --animate-glow: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 0 6px 18px rgba(47, 128, 237, 0.16);
+  }
+  to {
+    text-shadow: 0 10px 26px rgba(54, 179, 168, 0.14);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at top left, rgba(47, 128, 237, 0.08), transparent 28%),
+    radial-gradient(circle at top right, rgba(54, 179, 168, 0.08), transparent 24%),
+    linear-gradient(180deg, #f9fbfd 0%, #f3f7fa 100%);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-mono);
+  overflow-x: hidden;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  font: inherit;
+}
+
+.font-display {
+  font-family: var(--font-family-display);
+}
+
+.font-mono {
+  font-family: var(--font-family-mono);
+}
+
+.font-nft {
+  font-family: var(--font-family-nft);
+}
+
+.font-soft {
+  font-family: var(--font-family-soft);
+}
+
+.font-soft-safe {
+  font-family: var(--font-family-soft-safe);
+}
+
+.text-glow {
+  animation: var(--animate-glow);
+}
+
+.neo-brutal {
+  border: 1px solid rgba(15, 108, 189, 0.18);
+  border-radius: 999px;
+  box-shadow: 0 18px 30px rgba(47, 128, 237, 0.18);
+}
+
+.coin-button {
+  background:
+    radial-gradient(circle at 34% 26%, rgba(255, 255, 255, 0.78), transparent 18%),
+    radial-gradient(circle at 64% 72%, rgba(15, 108, 189, 0.18), transparent 32%),
+    linear-gradient(145deg, #f8d56b 0%, #f6b84b 40%, #2f80ed 100%);
+}
+
+.coin-button::after {
+  position: absolute;
+  inset: -18px;
+  content: "";
+  border: 1px solid rgba(47, 128, 237, 0.16);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #eaf0f5;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #b7c8d8;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8eabc4;
+}
