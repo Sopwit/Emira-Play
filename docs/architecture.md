@@ -1,0 +1,196 @@
+# Emira Clicker Architecture
+
+## Goal
+
+Emira should feel instant like a Telegram clicker game, but only economically meaningful actions should touch Soroban.
+The frontend can animate taps immediately, while the backend validates progress and Soroban records durable ownership,
+claims, rewards, and NFT state.
+
+## Core Principle
+
+Keep high-frequency gameplay off-chain. Put low-frequency, high-value state on-chain.
+
+## On-Chain Soroban Scope
+
+Recommended contracts:
+
+- `EmiraToken`: EMR token or claimable reward token.
+- `RewardVault`: season reward pool, claim windows, admin-funded emissions.
+- `NftCollection`: NFT minting, ownership, upgrade metadata pointer, and museum bonus eligibility.
+- `SeasonRegistry`: season id, reward rules, trusted snapshot root, and claim status.
+
+On-chain should store:
+
+- Wallet ownership.
+- NFT ownership and durable upgrades.
+- Claimable season rewards.
+- Reward claim status.
+- Contract events for backend/indexer reconciliation.
+
+On-chain should not store:
+
+- Every tap.
+- Raw energy changes.
+- Every combo tick.
+- Fast-changing leaderboard rows.
+- Telegram session state.
+
+## Product Surfaces
+
+The system is not a single frontend anymore. It should run as three connected surfaces:
+
+- `Neaf-Web`: promo site, story, ecosystem, CTA, social funnel.
+- `Emira Core Web`: main desktop/web game with Freighter-first flow.
+- `Telegram Mini App`: quick daily gameplay, streaks, missions, and market browse.
+
+All three surfaces should read from the same hybrid backend and the same Soroban-backed economic layer.
+
+## Wallet Strategy
+
+Recommended wallet split:
+
+- `Freighter`: desktop web, power-user flow, full market interaction.
+- `WalletConnect`: Telegram and mobile-friendly signing path.
+- `Passkey smart wallet`: later phase for simplified onboarding.
+
+This split follows the product constraints:
+
+- browser extension UX is strongest on desktop web
+- Telegram needs a mobile-native wallet path
+- all real-value settlement stays on Stellar in XLM
+
+## Backend Scope
+
+The backend is the game authority for moment-to-moment play.
+
+Current scaffold now exists under `backend/` and provides:
+
+- `/health`
+- `/api/v1/telegram/webhook`
+- `/api/v1/config`
+- `/api/v1/auth/telegram`
+- `/api/v1/auth/session`
+- `/api/v1/wallet/link`
+- `/api/v1/wallet/link/:playerId`
+- `/api/v1/profile/:player`
+- `/api/v1/leaderboard`
+- `/api/v1/market/listings`
+- `/api/v1/progress/tap`
+- `/api/v1/market/prepare-buy`
+
+Production routing currently mounts the backend under:
+
+- `https://emira-neaf.vercel.app/_/backend`
+- health check: `https://emira-neaf.vercel.app/_/backend/health`
+
+Suggested services:
+
+- `auth-service`: Telegram init data validation, wallet linking, session tokens.
+- `game-service`: tap validation, energy regen, combo rules, daily tasks, anti-cheat.
+- `inventory-service`: off-chain boosters, pending NFT boxes, market inventory.
+- `leaderboard-service`: season snapshots, ranks, reward eligibility.
+- `chain-worker`: builds Soroban transactions, tracks submitted txs, listens to events.
+- `indexer`: consumes Soroban events and updates local read models.
+- `promo-service`: public metrics for Neaf-Web hero counters, activity summaries, and CTA state.
+
+Suggested database tables:
+
+- `users`: telegram id, username, created at.
+- `wallet_links`: user id, Stellar address, network, verified at.
+- `sessions`: user id, surface, jwt id, expires at.
+- `player_progress`: user id, balance shadow, energy, tap power, level, streak.
+- `tasks`: task definitions.
+- `task_progress`: user id, task id, status, reward.
+- `inventory_items`: user id, item type, quantity, source.
+- `nft_cache`: contract token id, owner address, metadata, bonus.
+- `leaderboard_entries`: season id, user id, score, rank.
+- `season_snapshots`: season id, snapshot hash/root, generated at.
+- `chain_transactions`: user id, xdr hash, status, tx hash, retry count.
+- `promo_metrics`: key, value, refreshed at.
+
+## Freighter Flow
+
+Frontend flow:
+
+1. Check whether Freighter is installed with `isConnected`.
+2. Request dapp access with `setAllowed` or `requestAccess`.
+3. Read the public key with `getAddress` or the address returned from `requestAccess`.
+4. Read network details with `getNetworkDetails`.
+5. For Soroban actions, ask the backend to prepare an XDR.
+6. User signs the XDR in Freighter.
+7. Frontend sends signed XDR to backend or submits it directly, depending on the operation.
+
+Use Freighter for:
+
+- Wallet linking.
+- Claiming EMR rewards.
+- Minting/opening NFT boxes.
+- Buying on-chain items.
+- Signing authorization entries if a contract flow requires it.
+
+Do not use Freighter for:
+
+- Every tap.
+- Daily mission increments.
+- Pure UI state.
+
+## WalletConnect And Telegram Flow
+
+Telegram flow should look like this:
+
+1. Telegram opens the Mini App and sends `initData`.
+2. Frontend forwards `initData` to backend auth.
+3. Backend validates Telegram session and returns an app session token.
+4. User can browse and play off-chain without a wallet.
+5. When an XLM or Soroban action is needed, the Mini App opens WalletConnect.
+6. Backend prepares XDR or Soroban payload.
+7. Wallet signs.
+8. Backend indexes the resulting chain event and updates read models.
+
+This keeps Telegram onboarding light while preserving real Stellar settlement.
+
+## Reward Model
+
+Recommended first version:
+
+1. Gameplay earns off-chain `soft_emr`.
+2. Backend validates and calculates season score.
+3. At season end, backend creates a reward snapshot.
+4. `SeasonRegistry` stores the snapshot root/hash.
+5. Players claim on-chain EMR through Freighter.
+
+This keeps gameplay fast and limits transaction volume.
+
+## Anti-Cheat
+
+Minimum server-side checks:
+
+- Tap rate limits per device/session/user.
+- Energy cannot go negative.
+- Tap power only changes from owned upgrades.
+- Session heartbeat and suspicious burst detection.
+- Leaderboard score calculated server-side, never trusted from the client.
+- Wallet claims tied to a verified Telegram user.
+
+## Frontend Modules
+
+Current frontend sections should map to these responsibilities:
+
+- Ana Sayfa: instant tap loop, local feedback, current wallet status.
+- NFT Muzesi: read model from backend plus on-chain ownership cache.
+- Pazar: backend catalog, Freighter only for on-chain purchases.
+- Telegram Mini App: same core gameplay loop, smaller UI, WalletConnect-first.
+- Profil: Telegram user, wallet link, progression stats.
+- Liderlik: backend leaderboard read model.
+- Altyapi: visible architecture/status panel during early development.
+
+## Next Implementation Steps
+
+1. Replace in-memory backend state with Postgres or Supabase.
+2. Add Telegram auth validation and session tokens.
+3. Implement wallet abstraction in frontend with Freighter and WalletConnect adapters.
+4. Implement real Soroban transaction builder endpoints for claim, list, cancel, and buy.
+5. Add frontend API client and replace mocked state with backend reads.
+6. Add event indexer to reconcile Soroban state into the backend database.
+7. Add promo read endpoints for Neaf-Web counters and ecosystem status.
+8. Add admin and anti-cheat tooling for seasons, rewards, and suspicious tap bursts.
