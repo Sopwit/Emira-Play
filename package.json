@@ -1,0 +1,18 @@
+{
+  "name": "emira-core",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "audit:public": "node scripts/public-repo-check.mjs",
+    "build": "npm run build:web",
+    "ci:backend": "npm --workspace backend run smoke",
+    "ci:frontend": "npm --workspace frontend run lint && npm --workspace frontend run build",
+    "ci": "npm run audit:public && npm run ci:backend && npm run ci:frontend",
+    "build:web": "npm --workspace frontend run build",
+    "dev:web": "npm --workspace frontend run dev",
+    "dev:api": "npm --workspace backend run dev"
+  }
+}
