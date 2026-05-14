@@ -1,0 +1,127 @@
+import {
+  getAddress,
+  getNetworkDetails,
+  isAllowed,
+  isConnected,
+  requestAccess,
+} from '@stellar/freighter-api';
+
+import type { WalletAdapter, WalletConnection, WalletInspectionState } from './types';
+
+type ApiResult = {
+  error?: string | { message?: string };
+};
+
+function isEmbeddedBrowserEnvironment() {
+  if (typeof navigator === 'undefined') return false;
+  const agent = navigator.userAgent.toLowerCase();
+  return agent.includes('electron') || agent.includes(' telegram') || agent.includes('; wv');
+}
+
+function freighterUnavailableMessage() {
+  if (isEmbeddedBrowserEnvironment()) {
+    return 'Freighter bu gomulu tarayici oturumunda erisilemiyor. Normal bir Chrome/Brave sekmesinde ac veya WalletConnect kullan.';
+  }
+  return 'Freighter eklentisi kurulu degil veya bu tarayici oturumunda erisilemiyor.';
+}
+
+function normalizeFreighterMessage(message: string) {
+  if (/receiving end does not exist/i.test(message) || /could not establish connection/i.test(message)) {
+    return freighterUnavailableMessage();
+  }
+  return message;
+}
+
+function readError(result: ApiResult) {
+  if (!result.error) return null;
+  const message = typeof result.error === 'string' ? result.error : result.error.message ?? 'Freighter istegi basarisiz oldu.';
+  return normalizeFreighterMessage(message);
+}
+
+export async function getFreighterConnection(): Promise<WalletConnection | null> {
+  const connected = await isConnected();
+  const connectedError = readError(connected);
+  if (connectedError || !connected.isConnected) return null;
+
+  const addressResult = await getAddress();
+  const addressError = readError(addressResult);
+  if (addressError || !addressResult.address) return null;
+
+  const networkResult = await getNetworkDetails();
+  const networkError = readError(networkResult);
+  if (networkError) return null;
+
+  return {
+    address: addressResult.address,
+    network: networkResult.network,
+    networkPassphrase: networkResult.networkPassphrase,
+    sorobanRpcUrl: networkResult.sorobanRpcUrl,
+    provider: 'freighter',
+    surface: 'web',
+  };
+}
+
+export async function inspectFreighter(): Promise<WalletInspectionState> {
+  const connected = await isConnected();
+  const connectedError = readError(connected);
+  if (connectedError || !connected.isConnected) {
+    return {
+      state: 'missing',
+      provider: 'freighter',
+      message: freighterUnavailableMessage(),
+    };
+  }
+
+  const allowed = await isAllowed();
+  const allowedError = readError(allowed);
+  if (allowedError || !allowed.isAllowed) {
+    return {
+      state: 'ready',
+      provider: 'freighter',
+      message: 'Freighter bulundu. Sisteme girmek icin cuzdan izni gerekiyor.',
+    };
+  }
+
+  const connection = await getFreighterConnection();
+  if (!connection) {
+    return {
+      state: 'ready',
+      provider: 'freighter',
+      message: 'Freighter bulundu. Aktif hesabi baglamak icin izin ver.',
+    };
+  }
+
+  return { state: 'connected', provider: 'freighter', connection };
+}
+
+export async function connectFreighter(): Promise<WalletConnection> {
+  const connected = await isConnected();
+  const connectedError = readError(connected);
+  if (connectedError) throw new Error(connectedError);
+  if (!connected.isConnected) throw new Error(freighterUnavailableMessage());
+
+  const access = await requestAccess();
+  const accessError = readError(access);
+  if (accessError) throw new Error(accessError);
+  if (!access.address) throw new Error('Freighter adresi alinamadi.');
+
+  const network = await getNetworkDetails();
+  const networkError = readError(network);
+  if (networkError) throw new Error(networkError);
+
+  return {
+    address: access.address,
+    network: network.network,
+    networkPassphrase: network.networkPassphrase,
+    sorobanRpcUrl: network.sorobanRpcUrl,
+    provider: 'freighter',
+    surface: 'web',
+  };
+}
+
+export const freighterAdapter: WalletAdapter = {
+  provider: 'freighter',
+  surface: 'web',
+  inspect: inspectFreighter,
+  connect: connectFreighter,
+};

@@ -1,0 +1,18 @@
+{
+  "name": "@emira/backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Hybrid backend for Emira Core APIs, Telegram auth, and runtime state persistence.",
+  "scripts": {
+    "dev": "node --env-file=.env.development.local --watch src/server.mjs",
+    "start": "node --env-file=.env.development.local src/server.mjs",
+    "smoke": "node --check src/auth.mjs && node --check src/config.mjs && node --check src/data.mjs && node --check src/db.mjs && node --check src/routes.mjs && node --check src/server.mjs && node --check src/store.mjs && node --check src/telegramBot.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "pg": "^8.20.0"
+  }
+}
