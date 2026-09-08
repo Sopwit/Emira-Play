@@ -56,7 +56,6 @@ import {
   connectFreighter,
   connectWalletConnect,
   inspectFreighter,
-  inspectWalletConnect,
   type WalletConnection,
   type WalletInspectionState,
   type WalletProvider,
@@ -1051,6 +1050,8 @@ function GameApp() {
   const appliedLootboxIdsRef = useRef<Set<string>>(new Set());
   const persistProfileTimeoutRef = useRef<number | null>(null);
   const lastProfilePersistenceKeyRef = useRef<string | null>(null);
+  const pendingTapCountRef = useRef(0);
+  const tapFlushTimeoutRef = useRef<number | null>(null);
   const telegramLaunchUrl = appConfig?.telegram?.launchUrl ?? fallbackTelegramLaunchUrl;
   const lootboxChance = Number((1 + upgradeLevels['nft-drop-lens'] * 0.1).toFixed(1));
   const tapPower = 1 + upgradeLevels['tap-boost'];
@@ -1090,28 +1091,25 @@ function GameApp() {
   }, [telegramContext.isTelegram]);
 
   useEffect(() => {
-    Promise.all([
-      inspectFreighter().catch(
+    // WalletConnect pulls a large SDK graph. Load it only after the player explicitly
+    // selects it instead of delaying the first interactive render for every visitor.
+    inspectFreighter()
+      .catch(
         () =>
           ({
             state: 'missing',
             provider: 'freighter',
             message: 'Freighter durumu okunamadi.',
           }) as WalletInspectionState,
-      ),
-      inspectWalletConnect().catch(
-        () =>
-          ({
-            state: 'missing',
-            provider: 'walletconnect',
-            message: 'WalletConnect durumu okunamadi.',
-          }) as WalletInspectionState,
-      ),
-    ])
-      .then(([freighterStatus, walletConnectStatus]) => {
+      )
+      .then((freighterStatus) => {
         const statuses: WalletStatusMap = {
           freighter: freighterStatus,
-          walletconnect: walletConnectStatus,
+          walletconnect: {
+            state: 'ready',
+            provider: 'walletconnect',
+            message: 'WalletConnect baglanmaya hazir.',
+          },
         };
         const nextUi = deriveWalletUi(statuses);
         setWalletStatuses(statuses);
@@ -1316,7 +1314,8 @@ function GameApp() {
   }, [balance, owned, ownedProfileBackgroundIds, ownedTreeIds, profileAvatar, profileDisplayName, selectedProfileBackgroundId, selectedProfileCatNames, selectedTreeId, tapCount, timedChests, upgradeLevels, wallet]);
 
   useEffect(() => {
-    if (!currentPlayer) return;
+    const sessionToken = telegramSessionToken ?? guestSessionToken;
+    if (!currentPlayer || !sessionToken) return;
 
     if (persistProfileTimeoutRef.current) {
       window.clearTimeout(persistProfileTimeoutRef.current);
@@ -1346,6 +1345,7 @@ function GameApp() {
     persistProfileTimeoutRef.current = window.setTimeout(() => {
       void saveProfileState({
         playerId: currentPlayer.id,
+        sessionToken,
         state: {
           ...snapshot,
           savedAt: new Date().toISOString(),
@@ -1361,6 +1361,7 @@ function GameApp() {
   }, [
     balance,
     currentPlayer,
+    guestSessionToken,
     owned,
     ownedProfileBackgroundIds,
     ownedTreeIds,
@@ -1371,6 +1372,7 @@ function GameApp() {
     selectedTreeId,
     tapCount,
     timedChests,
+    telegramSessionToken,
     upgradeLevels,
     wallet,
   ]);
@@ -1493,23 +1495,28 @@ function GameApp() {
     }
 
     const playerId = currentPlayer?.id;
-    if (!playerId) return;
-    void recordTap(playerId)
-      .then((payload) => {
-        if (!payload?.progress) return;
-        setRemoteLeaderboard((current) =>
-          current.map((player) =>
-            player.id === playerId
-              ? {
-                  ...player,
-                  taps: player.taps + 1,
-                  balanceNeaf: payload.progress.balanceNeaf,
-                }
-              : player,
-          ),
-        );
-      })
-      .catch(() => {});
+    const sessionToken = telegramSessionToken ?? guestSessionToken;
+    if (!playerId || !sessionToken) return;
+
+    pendingTapCountRef.current += 1;
+    if (tapFlushTimeoutRef.current) return;
+    tapFlushTimeoutRef.current = window.setTimeout(() => {
+      const count = pendingTapCountRef.current;
+      pendingTapCountRef.current = 0;
+      tapFlushTimeoutRef.current = null;
+      void recordTap(playerId, sessionToken, count)
+        .then((payload) => {
+          if (!payload?.progress) return;
+          setRemoteLeaderboard((current) =>
+            current.map((player) =>
+              player.id === playerId
+                ? { ...player, taps: payload.progress.taps, balanceNeaf: payload.progress.balanceNeaf }
+                : player,
+            ),
+          );
+        })
+        .catch(() => {});
+    }, 250);
   };
 
   const buyUpgrade = (id: UpgradeId, price: number) => {

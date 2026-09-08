@@ -104,6 +104,15 @@ function totalOwnedFromState(state) {
   return Object.values(owned).reduce((sum, count) => sum + Math.max(0, Number(count) || 0), 0);
 }
 
+function resolveSessionPlayer(sessionToken, config) {
+  if (!isNonEmptyString(sessionToken)) return null;
+  const payload = verifySessionToken(sessionToken, config.sessionJwtSecret);
+  if (!payload) return null;
+  const session = sessionStore.get(payload.sid);
+  if (!session || session.exp <= Date.now()) return null;
+  return findPlayer(session.playerId);
+}
+
 export async function handleRoute(request, response, config) {
   const url = new URL(request.url ?? '/', 'http://localhost');
 
@@ -366,8 +375,18 @@ export async function handleRoute(request, response, config) {
 
   if (request.method === 'POST' && url.pathname === '/api/v1/progress/tap') {
     const body = await readBody(request).catch(() => null);
-    if (!body || typeof body.playerId !== 'string') {
-      json(response, 400, { error: 'playerId required' });
+    if (!body || typeof body.playerId !== 'string' || !isNonEmptyString(body.sessionToken)) {
+      json(response, 400, { error: 'playerId and sessionToken required' });
+      return;
+    }
+    const authenticatedPlayer = resolveSessionPlayer(body.sessionToken, config);
+    if (!authenticatedPlayer || authenticatedPlayer.id !== body.playerId) {
+      json(response, 401, { error: 'valid session for player required' });
+      return;
+    }
+    const tapCount = Number.isInteger(body.count) ? body.count : 1;
+    if (tapCount < 1 || tapCount > 50) {
+      json(response, 400, { error: 'count must be an integer between 1 and 50' });
       return;
     }
 
@@ -377,17 +396,21 @@ export async function handleRoute(request, response, config) {
       return;
     }
 
-    const nextCombo = current.combo >= 25 ? 1 : current.combo + 1;
-    const gain = current.tapPower * current.combo;
+    let combo = current.combo;
+    let gain = 0;
+    for (let index = 0; index < tapCount; index += 1) {
+      gain += current.tapPower * combo;
+      combo = combo >= 25 ? 1 : combo + 1;
+    }
     const next = {
       ...current,
-      combo: nextCombo,
+      combo,
       balanceNeaf: current.balanceNeaf + gain,
     };
     playerProgress.set(body.playerId, next);
     const player = findPlayer(body.playerId);
     if (player) {
-      player.taps += 1;
+      player.taps += tapCount;
       player.balanceNeaf = next.balanceNeaf;
       const profileState = ensurePlayerState(player.id);
       if (profileState) {
@@ -398,7 +421,7 @@ export async function handleRoute(request, response, config) {
       }
     }
     await persistPlayerBundle(body.playerId);
-    json(response, 200, { ok: true, progress: next, gain });
+    json(response, 200, { ok: true, progress: { ...next, taps: player?.taps ?? 0 }, gain });
     return;
   }
 
@@ -447,14 +470,14 @@ export async function handleRoute(request, response, config) {
 
   if (request.method === 'POST' && url.pathname === '/api/v1/profile/state') {
     const body = await readBody(request).catch(() => null);
-    if (!body || typeof body.playerId !== 'string' || !body.state || typeof body.state !== 'object') {
-      json(response, 400, { error: 'playerId and state required' });
+    if (!body || typeof body.playerId !== 'string' || !isNonEmptyString(body.sessionToken) || !body.state || typeof body.state !== 'object') {
+      json(response, 400, { error: 'playerId, sessionToken and state required' });
       return;
     }
 
-    const player = findPlayer(body.playerId);
-    if (!player) {
-      notFound(response);
+    const player = resolveSessionPlayer(body.sessionToken, config);
+    if (!player || player.id !== body.playerId) {
+      json(response, 401, { error: 'valid session for player required' });
       return;
     }
 

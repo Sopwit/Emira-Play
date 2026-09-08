@@ -30,10 +30,10 @@ export async function fetchMarketListings() {
   return request('/api/v1/market/listings');
 }
 
-export async function recordTap(playerId: string) {
+export async function recordTap(playerId: string, sessionToken: string, count = 1) {
   return request('/api/v1/progress/tap', {
     method: 'POST',
-    body: JSON.stringify({ playerId }),
+    body: JSON.stringify({ playerId, sessionToken, count }),
   });
 }
 
@@ -95,7 +95,7 @@ export async function fetchProfile(playerId: string) {
   return request(`/api/v1/profile/${playerId}`);
 }
 
-export async function saveProfileState(input: { playerId: string; state: unknown }) {
+export async function saveProfileState(input: { playerId: string; sessionToken: string; state: unknown }) {
   return request('/api/v1/profile/state', {
     method: 'POST',
     body: JSON.stringify(input),

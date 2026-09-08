@@ -110,6 +110,8 @@ export const playerProgress = new Map(
 export const sessionStore = new Map((runtimeState.sessions ?? []).map((session) => [session.sid, session]));
 export const walletLinks = new Map((runtimeState.walletLinks ?? []).map((item) => [item.playerId, item]));
 export const playerStates = new Map((runtimeState.playerStates ?? []).map((item) => [item.playerId, item.state]));
+let lastRuntimeRefreshAt = 0;
+const RUNTIME_REFRESH_TTL_MS = 2_000;
 
 function replaceArrayContents(target, next) {
   target.splice(0, target.length, ...next);
@@ -123,6 +125,8 @@ function replaceMapContents(target, entries) {
 }
 
 export async function refreshRuntimeState() {
+  const now = Date.now();
+  if (now - lastRuntimeRefreshAt < RUNTIME_REFRESH_TTL_MS) return;
   const nextState = postgresEnabled()
     ? await loadPostgresState()
     : loadRuntimeState(fallbackState);
@@ -145,6 +149,7 @@ export async function refreshRuntimeState() {
   replaceMapContents(sessionStore, (merged.sessions ?? []).map((session) => [session.sid, session]));
   replaceMapContents(walletLinks, (merged.walletLinks ?? []).map((item) => [item.playerId, item]));
   replaceMapContents(playerStates, (merged.playerStates ?? []).map((item) => [item.playerId, item.state]));
+  lastRuntimeRefreshAt = now;
 }
 
 function slugify(value) {
