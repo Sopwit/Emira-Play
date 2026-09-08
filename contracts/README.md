@@ -15,4 +15,4 @@ Public repo hygiene:
 
 Current scope note:
 
-- these contracts represent the current hackathon implementation, not the final production economy design described in `docs/onchain-migration-plan.md`
+- these contracts represent the current hackathon implementation, not the final production economy design described in `docs/contracts/onchain-migration-plan.md`

@@ -53,4 +53,4 @@ The script:
 - Production deployment still requires real testnet credentials and funded accounts.
 - `emira_marketplace` is state-oriented and expects XLM settlement to be signed in the wallet layer.
 - `emira_rewards` is designed for hybrid flows where off-chain validation decides when reward claims are permitted.
-- Contract verification could not be re-run in this environment without external crate downloads; run `cargo test --workspace` locally when network access is available.
+- Contracts pass unit tests locally via `cargo test --workspace`.

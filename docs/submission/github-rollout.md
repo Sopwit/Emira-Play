@@ -1,6 +1,6 @@
 # GitHub Rollout Plan
 
-This repository is prepared for a staged public GitHub rollout.
+This document records the historical staged public GitHub rollout. The rollout is complete; current development happens directly from `main` through reviewed pull requests.
 
 ## Merge order
 

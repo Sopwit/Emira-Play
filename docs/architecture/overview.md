@@ -70,9 +70,11 @@ Current scaffold now exists under `backend/` and provides:
 - `/api/v1/config`
 - `/api/v1/auth/telegram`
 - `/api/v1/auth/session`
+- `/api/v1/wallet/session`
 - `/api/v1/wallet/link`
 - `/api/v1/wallet/link/:playerId`
 - `/api/v1/profile/:player`
+- `/api/v1/profile/state`
 - `/api/v1/leaderboard`
 - `/api/v1/market/listings`
 - `/api/v1/progress/tap`
@@ -163,9 +165,15 @@ This keeps gameplay fast and limits transaction volume.
 
 ## Anti-Cheat
 
-Minimum server-side checks:
+Implemented server-side protections:
 
-- Tap rate limits per device/session/user.
+- Progress and profile persistence require a signed, unexpired session owned by the requested player.
+- Tap batches are bounded to 1–50 events per request.
+- Progress is persisted by the backend rather than accepting an anonymous write.
+
+Required before a production economy:
+
+- Durable tap rate limits per device/session/user.
 - Energy cannot go negative.
 - Tap power only changes from owned upgrades.
 - Session heartbeat and suspicious burst detection.
