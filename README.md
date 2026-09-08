@@ -5,7 +5,7 @@
 [![CI Quality Gate](https://github.com/Sopwit/Emira-Play/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/Sopwit/Emira-Play/actions)
 [![Stellar Testnet](https://img.shields.io/badge/Stellar-Testnet-blue.svg)](https://stellar.expert/explorer/testnet)
 [![React 19](https://img.shields.io/badge/React-19-61dafb.svg)](https://react.dev)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 ---
 
@@ -58,4 +58,4 @@ All technical specifications, contracts, and deployment records are located in [
 
 ## 📄 License
 
-[MIT](LICENSE)
+This project is licensed under the [Apache-2.0 License](LICENSE).
