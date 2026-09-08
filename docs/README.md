@@ -1,6 +1,18 @@
-# Emira Documentation Index
+# Emira Technical Documentation
 
-Welcome to the Emira technical documentation. This directory provides in-depth architectural guides, smart contract references, integration specifications, and hackathon submission records.
+Welcome to the Emira technical documentation. This directory provides in-depth architectural guides, smart contract specifications, integration manuals, and hackathon submission records.
+
+---
+
+## 🌐 Live Deployments & Contracts
+
+| Component | Target / Address | Explorer / Link |
+|---|---|---|
+| **Web Client** | `https://emira-neaf.vercel.app` | [Open Web App](https://emira-neaf.vercel.app) |
+| **Telegram Bot** | `@emira_game_bot` | [Launch Mini App](https://t.me/emira_game_bot?startapp=emira-core) |
+| **Backend API** | `https://emira-neaf.vercel.app/_/backend` | [Health Check](https://emira-neaf.vercel.app/_/backend/health) |
+| **Marketplace Contract** | `CBRKJVWTTF5DO2ZVIDOP3TSBTPYQXHGQIPA4ANFI7WKG4X65Y3MCCXJI` | [Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBRKJVWTTF5DO2ZVIDOP3TSBTPYQXHGQIPA4ANFI7WKG4X65Y3MCCXJI) |
+| **Rewards Contract** | `CCO434MY5ASOQIJALSN2KINXVEQMJKCW3HRMVRZSF2MOXUI7O3V4WTJD` | [Stellar Expert](https://stellar.expert/explorer/testnet/contract/CCO434MY5ASOQIJALSN2KINXVEQMJKCW3HRMVRZSF2MOXUI7O3V4WTJD) |
 
 ---
 
@@ -8,20 +20,21 @@ Welcome to the Emira technical documentation. This directory provides in-depth a
 
 ```text
 docs/
-├── architecture/          # System design, data flow, and runtime mechanics
-│   └── overview.md        # Full architecture blueprint & security model
-├── contracts/             # Stellar / Soroban smart contract guides
-│   ├── deploy-testnet.md  # Testnet build, deployment, and verification guide
-│   └── onchain-migration-plan.md # Roadmap for full on-chain inventory & settlement
-├── integrations/          # External surface integrations
-│   └── telegram-mini-app.md # Telegram Mini App runtime, auth & launch specs
-├── planning/              # Project vision and delivery roadmap
-│   └── roadmap.md         # Phased development milestones
-├── submission/            # Hackathon validation artifacts
-│   ├── checklist.md       # Submission readiness checklist
-│   ├── github-rollout.md  # Rollout record & branch lifecycle
-│   └── transaction-hash.md# Verified Stellar testnet transaction hashes
-└── screenshots/           # UI preview assets & application captures
+├── README.md                      # Documentation hub (this file)
+├── architecture/
+│   └── overview.md                # System design, data flow & anti-cheat mechanics
+├── contracts/
+│   ├── deploy-testnet.md          # Soroban testnet build, deploy & verification
+│   └── onchain-migration-plan.md  # Tokenized NFT & full on-chain transition plan
+├── integrations/
+│   └── telegram-mini-app.md       # Telegram Mini App HMAC auth & WalletConnect
+├── planning/
+│   └── roadmap.md                 # Project roadmap & milestones
+├── submission/
+│   ├── checklist.md               # Hackathon track submission criteria
+│   ├── github-rollout.md          # Branch rollout & release notes
+│   └── transaction-hash.md        # Recorded Stellar testnet transaction proofs
+└── screenshots/                   # Application preview screenshots
     ├── README.md
     ├── leaderboard.png
     ├── market-grid.png
@@ -31,22 +44,11 @@ docs/
 
 ---
 
-## 📚 Categories & Quick Links
+## 📚 Documentation Guides
 
-### 1. [Architecture & System Design](architecture/overview.md)
-- **[System Overview](architecture/overview.md)**: Deep dive into the hybrid Web2/Web3 split, client-server data flows, anti-cheat mechanisms, and session management.
-
-### 2. [Smart Contracts](contracts/deploy-testnet.md)
-- **[Testnet Deployment Guide](contracts/deploy-testnet.md)**: How to compile, deploy, initialize, and test `emira_marketplace` and `emira_rewards` on Soroban testnet.
-- **[On-Chain Migration Plan](contracts/onchain-migration-plan.md)**: Comprehensive design for tokenized NFT inventories (`emira_collectibles`), escrow settlement, and token rewards.
-
-### 3. [Integrations](integrations/telegram-mini-app.md)
-- **[Telegram Mini App](integrations/telegram-mini-app.md)**: HMAC session verification, BotFather configuration, WebApp UI constraints, and mobile wallet handling via WalletConnect.
-
-### 4. [Planning & Roadmap](planning/roadmap.md)
-- **[Roadmap](planning/roadmap.md)**: Phase 1 through Phase 5 milestone tracking from MVP to production readiness.
-
-### 5. [Submission Proofs](submission/checklist.md)
-- **[Submission Checklist](submission/checklist.md)**: Verification of all hackathon track criteria.
-- **[Verified Transaction Hashes](submission/transaction-hash.md)**: Exact Stellar testnet transaction hashes with contract addresses.
-- **[GitHub Rollout Plan](submission/github-rollout.md)**: History of repo foundation and branch stabilization.
+- 🏛️ **[System Architecture](architecture/overview.md)** — Hybrid Web2/Web3 split, client batching, Postgres runtime caching, and anti-abuse mechanics.
+- 📦 **[Smart Contracts & Deployment](contracts/deploy-testnet.md)** — How to build, test, and deploy Soroban contracts on Stellar testnet.
+- 🗺️ **[On-Chain Migration Plan](contracts/onchain-migration-plan.md)** — Architectural blueprint for tokenized NFT inventory and escrow settlement.
+- 🤖 **[Telegram Mini App](integrations/telegram-mini-app.md)** — BotFather setup, HMAC initialization, and mobile wallet integration.
+- 🎯 **[Roadmap](planning/roadmap.md)** — 5-phase engineering plan from MVP to mainnet.
+- 📋 **[Submission Checklist & Proofs](submission/checklist.md)** — Verification artifacts and [transaction hashes](submission/transaction-hash.md).
